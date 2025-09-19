@@ -4,9 +4,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Camera, Loader2 } from "lucide-react";
 import { useTelegram } from "@/hooks/useTelegram";
 import { useToast } from "@/hooks/use-toast";
+import { AdCategory, AdType } from "@/types";
 
 interface CreateAdFormProps {
   onClose: () => void;
@@ -14,6 +17,8 @@ interface CreateAdFormProps {
     title: string;
     description: string;
     price: number;
+    category: AdCategory;
+    ad_type: AdType[];
     image?: File;
     contact_info?: string;
   }) => Promise<void>;
@@ -28,6 +33,8 @@ export const CreateAdForm = ({ onClose, onSubmit }: CreateAdFormProps) => {
     description: '',
     price: '',
     contact_info: '',
+    category: '' as AdCategory | '',
+    ad_type: [] as AdType[],
   });
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -57,7 +64,7 @@ export const CreateAdForm = ({ onClose, onSubmit }: CreateAdFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title.trim() || !formData.description.trim() || !formData.price) {
+    if (!formData.title.trim() || !formData.description.trim() || !formData.price || !formData.category || formData.ad_type.length === 0) {
       toast({
         title: "Ошибка",
         description: "Заполните все обязательные поля",
@@ -82,6 +89,8 @@ export const CreateAdForm = ({ onClose, onSubmit }: CreateAdFormProps) => {
         title: formData.title.trim(),
         description: formData.description.trim(),
         price: price,
+        category: formData.category,
+        ad_type: formData.ad_type,
         image: image || undefined,
         contact_info: formData.contact_info.trim() || undefined,
       });
@@ -101,6 +110,15 @@ export const CreateAdForm = ({ onClose, onSubmit }: CreateAdFormProps) => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleTypeChange = (type: AdType, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      ad_type: checked 
+        ? [...prev.ad_type, type]
+        : prev.ad_type.filter(t => t !== type)
+    }));
   };
 
   // Настройка кнопки "Назад"
@@ -178,15 +196,55 @@ export const CreateAdForm = ({ onClose, onSubmit }: CreateAdFormProps) => {
               id="title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Например: iPhone 14 Pro"
+              placeholder="Например: Labubu Winter Series"
               className="mt-1"
               maxLength={100}
             />
           </div>
 
           <div>
+            <Label htmlFor="category" className="text-sm font-medium text-telegram-section-header">
+              Категория *
+            </Label>
+            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value as AdCategory }))}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Выберите категорию" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="figures">Фигурки (виниловые)</SelectItem>
+                <SelectItem value="merch">Мерч</SelectItem>
+                <SelectItem value="plush">Плюши</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-telegram-section-header">
+              Тип объявления *
+            </Label>
+            <div className="flex gap-4 mt-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="sale" 
+                  checked={formData.ad_type.includes('sale')}
+                  onCheckedChange={(checked) => handleTypeChange('sale', checked as boolean)}
+                />
+                <Label htmlFor="sale" className="text-sm">Продажа</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="exchange" 
+                  checked={formData.ad_type.includes('exchange')}
+                  onCheckedChange={(checked) => handleTypeChange('exchange', checked as boolean)}
+                />
+                <Label htmlFor="exchange" className="text-sm">Обмен</Label>
+              </div>
+            </div>
+          </div>
+
+          <div>
             <Label htmlFor="price" className="text-sm font-medium text-telegram-section-header">
-              Цена *
+              Цена (₽) *
             </Label>
             <Input
               id="price"
@@ -236,7 +294,7 @@ export const CreateAdForm = ({ onClose, onSubmit }: CreateAdFormProps) => {
             Автор объявления
           </Label>
           <p className="mt-1 text-telegram-text">
-            {user?.first_name} {user?.last_name}
+            {user?.first_name || 'Тестовый пользователь'} {user?.last_name || ''}
           </p>
         </Card>
 

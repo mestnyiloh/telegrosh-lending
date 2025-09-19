@@ -1,8 +1,13 @@
+export type AdCategory = 'figures' | 'merch' | 'plush';
+export type AdType = 'sale' | 'exchange';
+
 export interface Ad {
   id: string;
   title: string;
   description: string;
   price: number;
+  category: AdCategory;
+  ad_type: AdType[];
   image_url?: string;
   created_at: string;
   author_id: number;

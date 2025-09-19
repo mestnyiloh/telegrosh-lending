@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, User, Calendar, Phone } from "lucide-react";
 import { Ad } from "@/types";
 import { useTelegram } from "@/hooks/useTelegram";
@@ -74,13 +75,32 @@ export const AdDetail = ({ ad, onClose }: AdDetailProps) => {
 
         {/* Основная информация */}
         <Card className="p-4 space-y-3">
-          <h2 className="text-xl font-semibold text-telegram-text">
-            {ad.title}
-          </h2>
+          <div className="flex justify-between items-start gap-3">
+            <h2 className="text-xl font-semibold text-telegram-text flex-1">
+              {ad.title}
+            </h2>
+            <div className="flex flex-col gap-1">
+              {ad.ad_type.map(type => (
+                <Badge 
+                  key={type} 
+                  variant={type === 'sale' ? 'default' : 'outline'}
+                  className="text-xs"
+                >
+                  {type === 'sale' ? 'Продажа' : 'Обмен'}
+                </Badge>
+              ))}
+            </div>
+          </div>
           
-          <p className="text-2xl font-bold text-telegram-link">
-            {formatPrice(ad.price)}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-2xl font-bold text-telegram-link">
+              {formatPrice(ad.price)}
+            </p>
+            <Badge variant="secondary" className="text-xs">
+              {ad.category === 'figures' ? 'Фигурки' : 
+               ad.category === 'merch' ? 'Мерч' : 'Плюши'}
+            </Badge>
+          </div>
         </Card>
 
         {/* Описание */}
