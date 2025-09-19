@@ -47,6 +47,16 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        telegram: {
+          bg: "hsl(var(--telegram-bg))",
+          text: "hsl(var(--telegram-text))",
+          hint: "hsl(var(--telegram-hint))",
+          link: "hsl(var(--telegram-link))",
+          button: "hsl(var(--telegram-button))",
+          "button-text": "hsl(var(--telegram-button-text))",
+          "section-bg": "hsl(var(--telegram-section-bg))",
+          "section-header": "hsl(var(--telegram-section-header))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
