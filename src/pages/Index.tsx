@@ -263,12 +263,12 @@ const Index = () => {
         ) : (
           <div className="space-y-3">
             {filteredAds.map((ad) => (
-              <div key={ad.id} className="relative">
+              <div key={ad.id} className="space-y-2">
                 <AdCard 
                   ad={ad} 
                   onClick={() => setSelectedAd(ad)}
                 />
-                <div className="absolute top-2 right-2 flex gap-1">
+                <div className="flex gap-1 px-1">
                   <Badge variant="secondary" className="text-xs">
                     {getCategoryLabel(ad.category)}
                   </Badge>

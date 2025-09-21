@@ -28,9 +28,9 @@ export const AdCard = ({ ad, onClick }: AdCardProps) => {
       className="p-0 overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
       onClick={onClick}
     >
-      <div className="flex gap-3 p-4">
+      <div className="flex gap-3 p-3">
         {ad.image_url && (
-          <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-muted">
+          <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-muted">
             <img 
               src={ad.image_url} 
               alt={ad.title}
@@ -39,7 +39,7 @@ export const AdCard = ({ ad, onClick }: AdCardProps) => {
           </div>
         )}
         
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex flex-col">
           <h3 className="font-medium text-telegram-text text-sm leading-tight mb-1 line-clamp-2">
             {ad.title}
           </h3>
@@ -48,7 +48,7 @@ export const AdCard = ({ ad, onClick }: AdCardProps) => {
             {formatPrice(ad.price)}
           </p>
           
-          <div className="flex items-center justify-between text-xs text-telegram-hint">
+          <div className="flex items-center justify-between text-xs text-telegram-hint mb-2">
             <span>{formatDate(ad.created_at)}</span>
             <span>{ad.author_name}</span>
           </div>
