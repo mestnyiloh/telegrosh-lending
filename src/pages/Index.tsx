@@ -4,8 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, RefreshCw, Filter } from "lucide-react";
+import { Plus, Search, RefreshCw, Filter, Grid, List } from "lucide-react";
 import { AdCard } from "@/components/AdCard";
+import { AdGridCard } from "@/components/AdGridCard";
 import { AdDetail } from "@/components/AdDetail";
 import { CreateAdForm } from "@/components/CreateAdForm";
 import { useTelegram } from "@/hooks/useTelegram";
@@ -23,6 +24,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'all'>('all');
   const [selectedType, setSelectedType] = useState<AdType | 'all'>('all');
+  const [viewType, setViewType] = useState<'list' | 'grid'>('list');
 
   // Моковые данные для демонстрации коллекционных фигурок
   const mockAds: Ad[] = [
@@ -181,14 +183,24 @@ const Index = () => {
             <h1 className="text-xl font-semibold text-telegram-text">
               Pop Mart Маркет
             </h1>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={handleCreateAd}
-              className="p-2 h-auto"
-            >
-              <Plus className="w-5 h-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setViewType(viewType === 'list' ? 'grid' : 'list')}
+                className="p-2 h-auto"
+              >
+                {viewType === 'list' ? <Grid className="w-5 h-5" /> : <List className="w-5 h-5" />}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleCreateAd}
+                className="p-2 h-auto"
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
           
           <p className="text-sm text-telegram-hint mt-1">
@@ -261,13 +273,21 @@ const Index = () => {
             )}
           </Card>
         ) : (
-          <div className="space-y-3">
+          <div className={viewType === 'grid' ? 'grid grid-cols-2 gap-3' : 'space-y-3'}>
             {filteredAds.map((ad) => (
-              <AdCard 
-                key={ad.id}
-                ad={ad} 
-                onClick={() => setSelectedAd(ad)}
-              />
+              viewType === 'grid' ? (
+                <AdGridCard 
+                  key={ad.id}
+                  ad={ad} 
+                  onClick={() => setSelectedAd(ad)}
+                />
+              ) : (
+                <AdCard 
+                  key={ad.id}
+                  ad={ad} 
+                  onClick={() => setSelectedAd(ad)}
+                />
+              )
             ))}
           </div>
         )}
