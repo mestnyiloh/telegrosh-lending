@@ -273,7 +273,7 @@ const Index = () => {
             )}
           </Card>
         ) : (
-          <div className={viewType === 'grid' ? 'grid grid-cols-2 gap-3' : 'space-y-3'}>
+          <div className={viewType === 'grid' ? 'space-y-3' : 'space-y-3'}>
             {filteredAds.map((ad) => (
               viewType === 'grid' ? (
                 <AdGridCard 
