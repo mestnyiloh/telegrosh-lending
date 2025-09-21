@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Ad } from "@/types";
 
 interface AdCardProps {
@@ -23,6 +24,15 @@ export const AdCard = ({ ad, onClick }: AdCardProps) => {
     });
   };
 
+  const getCategoryLabel = (category: string) => {
+    const labels = {
+      'figures': 'Фигурки',
+      'merch': 'Мерч',
+      'plush': 'Плюши'
+    };
+    return labels[category as keyof typeof labels] || category;
+  };
+
   return (
     <Card 
       className="p-0 overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
@@ -30,7 +40,7 @@ export const AdCard = ({ ad, onClick }: AdCardProps) => {
     >
       <div className="flex gap-3 p-3">
         {ad.image_url && (
-          <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-muted">
+          <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-muted">
             <img 
               src={ad.image_url} 
               alt={ad.title}
@@ -51,6 +61,22 @@ export const AdCard = ({ ad, onClick }: AdCardProps) => {
           <div className="flex items-center justify-between text-xs text-telegram-hint mb-2">
             <span>{formatDate(ad.created_at)}</span>
             <span>{ad.author_name}</span>
+          </div>
+
+          <div className="flex gap-1 mt-auto">
+            <Badge variant="secondary" className="text-xs">
+              {getCategoryLabel(ad.category)}
+            </Badge>
+            {ad.ad_type.includes('sale') && (
+              <Badge variant="outline" className="text-xs">
+                Продажа
+              </Badge>
+            )}
+            {ad.ad_type.includes('exchange') && (
+              <Badge variant="outline" className="text-xs">
+                Обмен
+              </Badge>
+            )}
           </div>
         </div>
       </div>

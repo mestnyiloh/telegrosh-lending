@@ -263,26 +263,11 @@ const Index = () => {
         ) : (
           <div className="space-y-3">
             {filteredAds.map((ad) => (
-              <div key={ad.id} className="space-y-2">
-                <AdCard 
-                  ad={ad} 
-                  onClick={() => setSelectedAd(ad)}
-                />
-                <div className="flex gap-1 px-1">
-                  <Badge variant="secondary" className="text-xs">
-                    {getCategoryLabel(ad.category)}
-                  </Badge>
-                  {ad.ad_type.map(type => (
-                    <Badge 
-                      key={type} 
-                      variant={type === 'sale' ? 'default' : 'outline'}
-                      className="text-xs"
-                    >
-                      {getTypeLabel(type)}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+              <AdCard 
+                key={ad.id}
+                ad={ad} 
+                onClick={() => setSelectedAd(ad)}
+              />
             ))}
           </div>
         )}
