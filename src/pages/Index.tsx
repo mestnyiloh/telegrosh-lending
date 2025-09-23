@@ -12,6 +12,8 @@ import { CreateAdForm } from "@/components/CreateAdForm";
 import { useTelegram } from "@/hooks/useTelegram";
 import { useToast } from "@/hooks/use-toast";
 import { Ad, AdCategory, AdType } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
 
 const Index = () => {
   const { isReady, user, tg } = useTelegram();
@@ -22,66 +24,42 @@ const Index = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<AdCategory | 'all'>('all');
-  const [selectedType, setSelectedType] = useState<AdType | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState<string>('all');
   const [viewType, setViewType] = useState<'list' | 'grid'>('list');
 
-  // Моковые данные для демонстрации коллекционных фигурок
-  const mockAds: Ad[] = [
-    {
-      id: '1',
-      title: 'Labubu - Winter Series (Mint)',
-      description: 'Оригинальная фигурка Labubu из зимней серии в идеальном состоянии. Никогда не вскрывалась, есть все аксессуары и карточка.',
-      price: 3500,
-      category: 'figures',
-      ad_type: ['sale'],
-      image_url: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400',
-      created_at: '2024-01-15T10:00:00Z',
-      author_id: 12345,
-      author_name: 'Алексей',
-      contact_info: '+7 999 123-45-67'
-    },
-    {
-      id: '2',
-      title: 'Hirono UFO Series - Chase',
-      description: 'Редкая чейз версия Hirono из UFO серии. В отличном состоянии, с оригинальной упаковкой. Готов к обмену на Skullpanda.',
-      price: 8000,
-      category: 'figures',
-      ad_type: ['sale', 'exchange'],
-      image_url: 'https://images.unsplash.com/photo-1530325553146-dfc1684b6e40?w=400',
-      created_at: '2024-01-14T15:30:00Z',
-      author_id: 67890,
-      author_name: 'Мария',
-      contact_info: 'maria@example.com'
-    },
-    {
-      id: '3',
-      title: 'Pop Mart мерч - кружка Labubu',
-      description: 'Официальная кружка с принтом Labubu от Pop Mart. Использовалась пару раз, в отличном состоянии.',
-      price: 1200,
-      category: 'merch',
-      ad_type: ['sale'],
-      created_at: '2024-01-13T09:15:00Z',
-      author_id: 11111,
-      author_name: 'Дмитрий'
-    },
-    {
-      id: '4',
-      title: 'Плюшевый Skullpanda 30см',
-      description: 'Большая плюшевая игрушка Skullpanda высотой 30см. Очень мягкая и приятная на ощупь. Состояние новой.',
-      price: 2800,
-      category: 'plush',
-      ad_type: ['exchange'],
-      image_url: 'https://images.unsplash.com/photo-1530325553146-dfc1684b6e40?w=400',
-      created_at: '2024-01-12T14:20:00Z',
-      author_id: 22222,
-      author_name: 'Анна'
+  // Загрузка объявлений из Supabase
+  const loadAds = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('ads')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        toast({
+          title: "Ошибка загрузки",
+          description: "Не удалось загрузить объявления",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setAds(data || []);
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Произошла ошибка при загрузке данных",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
   useEffect(() => {
-    // Устанавливаем моковые данные при загрузке
-    setAds(mockAds);
+    loadAds();
   }, []);
 
   // Настройка главной кнопки
@@ -104,18 +82,47 @@ const Index = () => {
   };
 
   const handleAdSubmit = async (adData: any) => {
-    // Здесь будет интеграция с Supabase
-    const newAd: Ad = {
-      id: Date.now().toString(),
-      ...adData,
-      created_at: new Date().toISOString(),
-      author_id: user?.id || Date.now(),
-      author_name: user?.first_name || 'Тестовый пользователь',
-      image_url: adData.image ? URL.createObjectURL(adData.image) : undefined,
-    };
-    
-    setAds(prev => [newAd, ...prev]);
-    setShowCreateForm(false);
+    try {
+      const { data, error } = await supabase
+        .from('ads')
+        .insert({
+          title: adData.title,
+          description: adData.description,
+          price: adData.price,
+          category: adData.category,
+          ad_type: adData.ad_type,
+          contact_info: adData.contact_info,
+          author_id: user?.id || Date.now(),
+          author_name: user?.first_name || 'Тестовый пользователь',
+          image_url: adData.image ? URL.createObjectURL(adData.image) : null,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        toast({
+          title: "Ошибка",
+          description: "Не удалось создать объявление",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Успешно!",
+        description: "Объявление создано",
+      });
+
+      // Обновляем список объявлений
+      await loadAds();
+      setShowCreateForm(false);
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Произошла ошибка при создании объявления",
+        variant: "destructive",
+      });
+    }
   };
 
   // Фильтрация объявлений
@@ -128,21 +135,21 @@ const Index = () => {
     return matchesSearch && matchesCategory && matchesType;
   });
 
-  const getCategoryLabel = (category: AdCategory) => {
-    const labels = {
+  const getCategoryLabel = (category: string) => {
+    const labels: Record<string, string> = {
       figures: 'Фигурки',
       merch: 'Мерч',
       plush: 'Плюши'
     };
-    return labels[category];
+    return labels[category] || category;
   };
 
-  const getTypeLabel = (type: AdType) => {
-    const labels = {
+  const getTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
       sale: 'Продажа',
       exchange: 'Обмен'
     };
-    return labels[type];
+    return labels[type] || type;
   };
 
   if (!isReady) {
@@ -220,7 +227,7 @@ const Index = () => {
 
           {/* Фильтры */}
           <div className="mt-3 flex gap-2">
-            <Select value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as AdCategory | 'all')}>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="flex-1 bg-telegram-secondary-bg border-telegram-separator">
                 <SelectValue placeholder="Категория" />
               </SelectTrigger>
@@ -232,7 +239,7 @@ const Index = () => {
               </SelectContent>
             </Select>
 
-            <Select value={selectedType} onValueChange={(value) => setSelectedType(value as AdType | 'all')}>
+            <Select value={selectedType} onValueChange={setSelectedType}>
               <SelectTrigger className="flex-1 bg-telegram-secondary-bg border-telegram-separator">
                 <SelectValue placeholder="Тип" />
               </SelectTrigger>
@@ -273,23 +280,33 @@ const Index = () => {
             )}
           </Card>
         ) : (
-          <div className={viewType === 'grid' ? 'space-y-3' : 'space-y-3'}>
-            {filteredAds.map((ad) => (
-              viewType === 'grid' ? (
-                <AdGridCard 
-                  key={ad.id}
-                  ad={ad} 
-                  onClick={() => setSelectedAd(ad)}
-                />
-              ) : (
-                <AdCard 
-                  key={ad.id}
-                  ad={ad} 
-                  onClick={() => setSelectedAd(ad)}
-                />
-              )
+          <motion.div 
+            className={viewType === 'grid' ? 'space-y-3' : 'space-y-3'}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            {filteredAds.map((ad, index) => (
+              <motion.div
+                key={ad.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                {viewType === 'grid' ? (
+                  <AdGridCard 
+                    ad={ad} 
+                    onClick={() => setSelectedAd(ad)}
+                  />
+                ) : (
+                  <AdCard 
+                    ad={ad} 
+                    onClick={() => setSelectedAd(ad)}
+                  />
+                )}
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

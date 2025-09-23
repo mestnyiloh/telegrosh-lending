@@ -6,13 +6,14 @@ export interface Ad {
   title: string;
   description: string;
   price: number;
-  category: AdCategory;
-  ad_type: AdType[];
-  image_url?: string;
+  category: string;
+  ad_type: string[];
+  image_url?: string | null;
   created_at: string;
   author_id: number;
   author_name: string;
-  contact_info?: string;
+  contact_info?: string | null;
+  updated_at: string;
 }
 
 export interface TelegramUser {
