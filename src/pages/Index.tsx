@@ -83,6 +83,34 @@ const Index = () => {
 
   const handleAdSubmit = async (adData: any) => {
     try {
+      let imageUrl = null;
+
+      // Загружаем изображение в Storage если оно есть
+      if (adData.image) {
+        const fileExt = adData.image.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('ad-images')
+          .upload(fileName, adData.image);
+
+        if (uploadError) {
+          toast({
+            title: "Ошибка загрузки изображения",
+            description: uploadError.message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Получаем публичный URL изображения
+        const { data: urlData } = supabase.storage
+          .from('ad-images')
+          .getPublicUrl(uploadData.path);
+        
+        imageUrl = urlData.publicUrl;
+      }
+
       const { data, error } = await supabase
         .from('ads')
         .insert({
@@ -94,7 +122,7 @@ const Index = () => {
           contact_info: adData.contact_info,
           author_id: user?.id || Date.now(),
           author_name: user?.first_name || 'Тестовый пользователь',
-          image_url: adData.image ? URL.createObjectURL(adData.image) : null,
+          image_url: imageUrl,
         })
         .select()
         .single();
