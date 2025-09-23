@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, User, Calendar, Phone } from "lucide-react";
 import { Ad } from "@/types";
 import { useTelegram } from "@/hooks/useTelegram";
+import { ImageGallery } from "@/components/ImageGallery";
 
 interface AdDetailProps {
   ad: Ad;
@@ -62,14 +63,10 @@ export const AdDetail = ({ ad, onClose }: AdDetailProps) => {
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Изображение */}
-        {ad.image_url && (
+        {/* Изображения */}
+        {ad.images.length > 0 && (
           <Card className="p-0 overflow-hidden">
-            <img 
-              src={ad.image_url} 
-              alt={ad.title}
-              className="w-full h-64 object-cover"
-            />
+            <ImageGallery images={ad.images} alt={ad.title} />
           </Card>
         )}
 

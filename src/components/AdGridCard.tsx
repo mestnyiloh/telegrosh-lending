@@ -33,9 +33,9 @@ export const AdGridCard = ({ ad, onClick }: AdGridCardProps) => {
       <div className="relative h-full">
         {/* Фото на всю карточку */}
         <div className="absolute inset-0">
-          {ad.image_url ? (
+          {ad.images.length > 0 ? (
             <img 
-              src={ad.image_url} 
+              src={ad.images[0]} 
               alt={ad.title}
               className="w-full h-full object-cover"
             />

@@ -83,32 +83,40 @@ const Index = () => {
 
   const handleAdSubmit = async (adData: any) => {
     try {
-      let imageUrl = null;
+      let imageUrls: string[] = [];
 
-      // Загружаем изображение в Storage если оно есть
-      if (adData.image) {
-        const fileExt = adData.image.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('ad-images')
-          .upload(fileName, adData.image);
+      // Загружаем изображения в Storage если они есть
+      if (adData.images && adData.images.length > 0) {
+        const uploadPromises = adData.images.map(async (image, index) => {
+          const fileExt = image.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('ad-images')
+            .upload(fileName, image);
 
-        if (uploadError) {
+          if (uploadError) {
+            throw new Error(`Ошибка загрузки изображения ${index + 1}: ${uploadError.message}`);
+          }
+
+          // Получаем публичный URL изображения
+          const { data: urlData } = supabase.storage
+            .from('ad-images')
+            .getPublicUrl(uploadData.path);
+          
+          return urlData.publicUrl;
+        });
+
+        try {
+          imageUrls = await Promise.all(uploadPromises);
+        } catch (error) {
           toast({
-            title: "Ошибка загрузки изображения",
-            description: uploadError.message,
+            title: "Ошибка загрузки изображений",
+            description: error instanceof Error ? error.message : "Неизвестная ошибка",
             variant: "destructive",
           });
           return;
         }
-
-        // Получаем публичный URL изображения
-        const { data: urlData } = supabase.storage
-          .from('ad-images')
-          .getPublicUrl(uploadData.path);
-        
-        imageUrl = urlData.publicUrl;
       }
 
       const { data, error } = await supabase
@@ -122,7 +130,7 @@ const Index = () => {
           contact_info: adData.contact_info,
           author_id: user?.id || Date.now(),
           author_name: user?.first_name || 'Тестовый пользователь',
-          image_url: imageUrl,
+          images: imageUrls,
         })
         .select()
         .single();

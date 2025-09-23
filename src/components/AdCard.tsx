@@ -39,10 +39,10 @@ export const AdCard = ({ ad, onClick }: AdCardProps) => {
       onClick={onClick}
     >
       <div className="flex gap-3 p-3">
-        {ad.image_url && (
+        {ad.images.length > 0 && (
           <div className="flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-muted">
             <img 
-              src={ad.image_url} 
+              src={ad.images[0]} 
               alt={ad.title}
               className="w-full h-full object-cover"
             />

@@ -6,10 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Camera, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, X } from "lucide-react";
 import { useTelegram } from "@/hooks/useTelegram";
 import { useToast } from "@/hooks/use-toast";
 import { AdCategory, AdType } from "@/types";
+import { compressImages } from "@/utils/imageCompression";
 
 interface CreateAdFormProps {
   onClose: () => void;
@@ -19,7 +20,7 @@ interface CreateAdFormProps {
     price: number;
     category: AdCategory;
     ad_type: AdType[];
-    image?: File;
+    images?: File[];
     contact_info?: string;
   }) => Promise<void>;
 }
@@ -36,29 +37,45 @@ export const CreateAdForm = ({ onClose, onSubmit }: CreateAdFormProps) => {
     category: '' as AdCategory | '',
     ad_type: [] as AdType[],
   });
-  const [image, setImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB
+    const files = Array.from(e.target.files || []);
+    
+    if (images.length + files.length > 3) {
+      toast({
+        title: "Ошибка",
+        description: "Можно добавить не более 3 фотографий",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    files.forEach(file => {
+      if (file.size > 10 * 1024 * 1024) { // 10MB
         toast({
           title: "Ошибка",
-          description: "Размер файла не должен превышать 5MB",
+          description: "Размер файла не должен превышать 10MB",
           variant: "destructive",
         });
         return;
       }
       
-      setImage(file);
       const reader = new FileReader();
       reader.onload = () => {
-        setImagePreview(reader.result as string);
+        setImagePreviews(prev => [...prev, reader.result as string]);
       };
       reader.readAsDataURL(file);
-    }
+    });
+
+    setImages(prev => [...prev, ...files]);
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,13 +102,24 @@ export const CreateAdForm = ({ onClose, onSubmit }: CreateAdFormProps) => {
 
     setIsSubmitting(true);
     try {
+      let compressedImages: File[] = [];
+      
+      if (images.length > 0) {
+        toast({
+          title: "Обработка изображений",
+          description: "Сжимаем фотографии...",
+        });
+        
+        compressedImages = await compressImages(images, 150);
+      }
+
       await onSubmit({
         title: formData.title.trim(),
         description: formData.description.trim(),
         price: price,
         category: formData.category,
         ad_type: formData.ad_type,
-        image: image || undefined,
+        images: compressedImages.length > 0 ? compressedImages : undefined,
         contact_info: formData.contact_info.trim() || undefined,
       });
       
@@ -155,34 +183,57 @@ export const CreateAdForm = ({ onClose, onSubmit }: CreateAdFormProps) => {
         {/* Фото */}
         <Card className="p-4">
           <Label className="text-sm font-medium text-telegram-section-header">
-            Фотография
+            Фотографии ({images.length}/3)
           </Label>
           
-          <div className="mt-2">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-              id="image-upload"
-            />
-            <label
-              htmlFor="image-upload"
-              className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-telegram-link transition-colors"
-            >
-              {imagePreview ? (
-                <img 
-                  src={imagePreview} 
-                  alt="Preview" 
-                  className="w-full h-full object-cover rounded-lg"
+          <div className="mt-2 space-y-3">
+            {/* Превью загруженных изображений */}
+            {imagePreviews.length > 0 && (
+              <div className="grid grid-cols-3 gap-2">
+                {imagePreviews.map((preview, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-20 object-cover rounded-lg"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute -top-2 -right-2 w-6 h-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeImage(index)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Кнопка добавления фото */}
+            {images.length < 3 && (
+              <>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  id="image-upload"
+                  multiple
                 />
-              ) : (
-                <div className="flex flex-col items-center text-telegram-hint">
-                  <Camera className="w-8 h-8 mb-2" />
-                  <span className="text-sm">Добавить фото</span>
-                </div>
-              )}
-            </label>
+                <label
+                  htmlFor="image-upload"
+                  className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-telegram-link transition-colors"
+                >
+                  <div className="flex flex-col items-center text-telegram-hint">
+                    <Camera className="w-6 h-6 mb-1" />
+                    <span className="text-sm">Добавить фото</span>
+                    <span className="text-xs opacity-70">До 150kb каждое</span>
+                  </div>
+                </label>
+              </>
+            )}
           </div>
         </Card>
 

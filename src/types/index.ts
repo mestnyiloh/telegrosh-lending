@@ -8,7 +8,7 @@ export interface Ad {
   price: number;
   category: string;
   ad_type: string[];
-  image_url?: string | null;
+  images: string[];
   created_at: string;
   author_id: number;
   author_name: string;
