@@ -9,6 +9,11 @@ export interface Ad {
   category: string;
   ad_type: string[];
   images: string[];
+  location: string;
+  published_at: string;
+  expires_at: string;
+  archived: boolean;
+  status: 'active' | 'sold' | 'exchanged';
   created_at: string;
   author_id: number;
   author_name: string;
