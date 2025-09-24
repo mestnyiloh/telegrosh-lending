@@ -17,43 +17,58 @@ export type Database = {
       ads: {
         Row: {
           ad_type: string[]
+          archived: boolean | null
           author_id: number
           author_name: string
           category: string
           contact_info: string | null
           created_at: string
           description: string
+          expires_at: string | null
           id: string
           images: string[] | null
+          location: string
           price: number
+          published_at: string | null
+          status: string | null
           title: string
           updated_at: string
         }
         Insert: {
           ad_type: string[]
+          archived?: boolean | null
           author_id: number
           author_name: string
           category: string
           contact_info?: string | null
           created_at?: string
           description: string
+          expires_at?: string | null
           id?: string
           images?: string[] | null
+          location: string
           price: number
+          published_at?: string | null
+          status?: string | null
           title: string
           updated_at?: string
         }
         Update: {
           ad_type?: string[]
+          archived?: boolean | null
           author_id?: number
           author_name?: string
           category?: string
           contact_info?: string | null
           created_at?: string
           description?: string
+          expires_at?: string | null
           id?: string
           images?: string[] | null
+          location?: string
           price?: number
+          published_at?: string | null
+          status?: string | null
           title?: string
           updated_at?: string
         }
@@ -64,7 +79,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      archive_expired_ads: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
